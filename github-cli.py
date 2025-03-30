@@ -10,7 +10,6 @@ args = parser.parse_args()
 try:
     response = requests.get(f"https://api.github.com/users/{args.username}/events")
     data = response.json()
-
 except:
     print("Error: Unable to fetch data from GitHub API.")
     sys.exit(1)
@@ -60,14 +59,12 @@ def push_event():
                 commit_msg = []
                 for commit in event['payload']['commits']:
                     commit_msg.append(commit['message'])
-
             else:
                 continue
 
             if event['repo']['name'] not in repo_names:
-                repo_names.add(event['repo']['name'])                
+                repo_names.add(event['repo']['name'])
                 repo_data.append({"repo_name": event['repo']['name'], "repo_msgs": commit_msg})
-
             else:
                 for repo in repo_data:
                     if repo['repo_name'] == event['repo']['name']:
@@ -81,7 +78,16 @@ def pull_request_event():
 
     for event in data:
         if event['type'] == "PullRequestEvent":
-            
             if event['repo']['name'] not in repo_names:
                 repo_names.add(event['repo']['name'])
-                repo_data.append({"repo_name": event['repo']['name'], "action": []})
+                repo_data.append({"repo_name": event['repo']['name'], "pr_info": [{"action": event['payload']['action'], "title": event['payload']['pull_request']['title']}]})
+            else:
+                for repo in repo_data:
+                    if repo['repo_name'] == event['repo']['name']:
+                        repo['pr_info'].append({"action": event['payload']['action'], "title": event['payload']['pull_request']['title']})
+
+    repo_event_info[1]['info'] = repo_data
+
+push_event()
+pull_request_event()
+print(repo_event_info)
