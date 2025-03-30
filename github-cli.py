@@ -2,17 +2,55 @@ import argparse
 import sys
 import requests
 
-parser = argparse.ArgumentParser()
+HELP_MESSAGE = """
 
-parser.add_argument("username", type=str)
+"""
+
+if "--help" == sys.argv[1] or "help" == sys.argv[1]:
+    print(HELP_MESSAGE)
+    sys.exit(0)
+
+parser = argparse.ArgumentParser(description="Github Activity Tracker")
+subparser = parser.add_subparsers(dest="command")
+
+username_parser = subparser.add_parser("username")
+username_parser.add_argument("username")
+username_parser.add_argument("--default-events", action="store_true")
+username_parser.add_argument("--all-events", action="store_true")
+username_parser.add_argument("--push", action="store_true")
+username_parser.add_argument("--pullrequest", action="store_true")
+username_parser.add_argument("--issues", action="store_true")
+username_parser.add_argument("--fork", action="store_true")
+username_parser.add_argument("--watch", action="store_true")
+username_parser.add_argument("--create", action="store_true")
+username_parser.add_argument("--release", action="store_true")
+username_parser.add_argument("--delete", action="store_true")
+
 args = parser.parse_args()
 
-try:
-    response = requests.get(f"https://api.github.com/users/{args.username}/events")
-    data = response.json()
-except:
-    print("Error: Unable to fetch data from GitHub API.")
-    sys.exit(1)
+event_list = {args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete}
+def check_conflicts(args):
+    if args.default_events and args.all_events:
+        print(f"Error: The --default-events and --all-events flags cannot be used together.")
+        sys.exit(1)
+    
+    if args.default_events and any(event_list):
+        print(f"The --default-events flag can only be used on its own.")
+        sys.exit(1)
+
+    elif args.all_events and any(event_list):
+        print("The --all-events flag can only be used on its own.")
+        sys.exit(1)    
+
+def fetch_github_data(username):
+    try:
+        response = requests.get(f"https://api.github.com/users/{username}/events")
+        return response.json()
+    except:
+        print("Error: Unable to fetch data from GitHub API.")
+        sys.exit(1)
+
+data = fetch_github_data(args.username)
 
 repo_event_info = [
     {
@@ -197,3 +235,43 @@ def delete_event():
             })
 
     repo_event_info[7]['info'] = repo_data
+
+def display_events():
+    pass
+
+def main():
+    if args.default_events:
+        push_event()
+        pull_request_event()
+        issues_event()
+        fork_event()
+        watch_event()
+
+    elif args.all_events:
+        push_event()
+        pull_request_event()
+        issues_event()
+        fork_event()
+        watch_event()
+        create_event()
+        release_event()
+        delete_event()
+
+    elif any(event_list):
+        event_mapping = {
+            args.push: push_event,
+            args.pullrequest: pull_request_event,
+            args.issues: issues_event,
+            args.fork: fork_event,
+            args.watch: watch_event,
+            args.create: create_event,
+            args.release: release_event,
+            args.delete: delete_event
+        }
+        
+        for event_flag, event_function in event_mapping.items():
+            if event_flag:
+                event_function()        
+
+if __name__ == "__main__":
+    main()
