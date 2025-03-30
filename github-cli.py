@@ -162,7 +162,7 @@ def create_event():
     repo_data = []
 
     for event in data:
-        if event['type'] == "CreateEvemt":
+        if event['type'] == "CreateEvent":
             repo_data.append({
                 "repo_name": event['repo']['name'],
                 "timestamp": event['created_at'][0:10]
