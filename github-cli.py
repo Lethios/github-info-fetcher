@@ -58,13 +58,19 @@ def push_event():
             if event['payload']['commits']:
                 commit_msg = []
                 for commit in event['payload']['commits']:
-                    commit_msg.append(commit['message'])
+                    commit_msg.append({
+                        "message": commit['message'],
+                        "timestamp": event['created_at'][0:10]
+                    })
             else:
                 continue
 
             if event['repo']['name'] not in repo_names:
                 repo_names.add(event['repo']['name'])
-                repo_data.append({"repo_name": event['repo']['name'], "repo_msgs": commit_msg})
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "repo_msgs": commit_msg
+                })
             else:
                 for repo in repo_data:
                     if repo['repo_name'] == event['repo']['name']:
@@ -80,14 +86,114 @@ def pull_request_event():
         if event['type'] == "PullRequestEvent":
             if event['repo']['name'] not in repo_names:
                 repo_names.add(event['repo']['name'])
-                repo_data.append({"repo_name": event['repo']['name'], "pr_info": [{"action": event['payload']['action'], "title": event['payload']['pull_request']['title']}]})
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "pr_info": [{
+                        "action": event['payload']['action'],
+                        "title": event['payload']['pull_request']['title'],
+                        "timestamp": event['created_at'][0:10]
+                    }]
+                })
             else:
                 for repo in repo_data:
                     if repo['repo_name'] == event['repo']['name']:
-                        repo['pr_info'].append({"action": event['payload']['action'], "title": event['payload']['pull_request']['title']})
+                        repo['pr_info'].append({
+                            "action": event['payload']['action'],
+                            "title": event['payload']['pull_request']['title'],
+                            "timestamp": event['created_at'][0:10]
+                        })
 
     repo_event_info[1]['info'] = repo_data
 
-push_event()
-pull_request_event()
-print(repo_event_info)
+def issues_event():
+    repo_names = set()
+    repo_data = []
+
+    for event in data:
+        if event['type'] == "IssuesEvent":
+            if event['repo']['name'] not in repo_names:
+                repo_names.add(event['repo']['name'])
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "issue_info": [{
+                        "action": event['payload']['action'],
+                        "title": event['payload']['issue']['title'],
+                        "timestamp": event['created_at'][0:10]
+                    }]
+                })
+            else:
+                for repo in repo_data:
+                    if repo['repo_name'] == event['repo']['name']:
+                        repo['issue_info'].append({
+                            "action": event['payload']['action'],
+                            "title": event['payload']['issue']['title'],
+                            "timestamp": event['created_at'][0:10]
+                        })
+
+    repo_event_info[2]['info'] = repo_data
+
+def fork_event():
+    repo_data = []
+
+    for event in data:
+        if event['type'] == "ForkEvent":
+            repo_data.append({
+                "repo_name": event['repo']['name'],
+                "forked_repo_name": event['payload']['forkee']['full_name'],
+                "timestamp": event['created_at'][0:10]
+            })
+
+    repo_event_info[3]['info'] = repo_data
+
+def watch_event():
+    repo_data = []
+
+    for event in data:
+        if event['type'] == "WatchEvent":
+            repo_data.append({
+                "repo_name": event['repo']['name'],
+                "action": event['payload']['action'],
+                "timestamp": event['created_at'][0:10]
+            })
+    
+    repo_event_info[4]['info'] = repo_data
+
+def create_event():
+    repo_data = []
+
+    for event in data:
+        if event['type'] == "CreateEvemt":
+            repo_data.append({
+                "repo_name": event['repo']['name'],
+                "timestamp": event['created_at'][0:10]
+            })
+
+    repo_event_info[5]['info'] = repo_data
+
+def release_event():
+    repo_data = []
+
+    for event in data:
+        if event['type'] == "ReleaseEvent":
+            repo_data.append({
+                "repo_name": event['repo']['name'],
+                "release_name": event['payload']['name'],
+                "tag_name": event['payload']['tag_name'],
+                "timestamp": event['payload']['published_at'][0:10]
+            })
+
+    repo_event_info[6]['info'] = repo_data
+
+def delete_event():
+    repo_data = []
+
+    for event in data:
+        if event['type'] == "DeleteEvent":
+            repo_data.append({
+                "repo_name": event['repo']['name'],
+                "ref": event['payload']['ref'],
+                "ref_type": event['payload']['ref_type'],
+                "timestamp": event['created_at'][0:10]
+            })
+
+    repo_event_info[7]['info'] = repo_data
