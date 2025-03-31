@@ -502,6 +502,8 @@ def display_events():
     Example:
         display_events()
     """
+    print()
+    console.print("{:^100s}".format(f" [bold cyan]Displaying Github Event Activities of {args.username}[/bold cyan]"))
 
     if repo_event_info[0]['info'] is None:
         pass
