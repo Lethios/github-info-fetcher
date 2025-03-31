@@ -1,3 +1,51 @@
+"""
+GitHub Events Fetcher
+
+This module is a cli tool to fetch and display various GitHub events for a specified user.
+
+Features:
+- Fetch main events (Push, PullRequest, Issues, Fork, Watch).
+- Option to fetch all events including Create, Release, and Delete events.
+- Filter events by type using specific flags.
+- Combine multiple flags to customize the events fetched.
+- Display events in a user-friendly format using rich text formatting.
+
+Usage:
+    python github-cli.py username <github_username> <flag(s)>
+
+Available Flags:
+    --help             : Show the help message.
+    --default-events   : Fetch only the main events (Push, PullRequest, Issues, Fork, Watch).
+    --all-events       : Fetch every type of event.
+    --push             : Fetch Push events.
+    --pullrequest      : Fetch Pull Request events.
+    --issues           : Fetch Issues events.
+    --fork             : Fetch Fork events.
+    --watch            : Fetch Watch events.
+    --create           : Fetch Create events.
+    --release          : Fetch Release events.
+    --delete           : Fetch Delete events.
+
+Examples:
+1. To fetch the standard events:
+   python github-cli.py username <github_username> --default-events
+
+2. To fetch every event:
+   python github-cli.py username <github_username> --all-events
+
+3. To fetch only push events:
+   python github-cli.py username <github_username> --push
+
+4. To fetch pull request and issues events:
+   python github-cli.py username <github_username> --pullrequest --issues
+
+Note:
+- This program fetches events from GitHub, so a valid internet connection is required.
+- The events are displayed with rich text formatting for better readability.
+
+Author: Lethios
+"""
+
 import argparse
 import sys
 import requests
@@ -29,6 +77,7 @@ HELP_MESSAGE = """
 [bold green] Examples:[/bold green]
 
  1. To fetch the standard events:
+    [bold yellow] python github-cli.py username Lethios[/bold yellow] or
     [bold yellow] python github-cli.py username Lethios --default-events[/bold yellow]
 
  2. To fetch every event:
@@ -71,24 +120,73 @@ username_parser.add_argument("--delete", action="store_true")
 
 args = parser.parse_args()
 
-def check_conflicts(args):
-    if args.default_events and args.all_events:
-        print(f"Error: The --default-events and --all-events flags cannot be used together.")
-        sys.exit(1)
-    
-    if args.default_events and any([args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete]):
-        print(f"The --default-events flag can only be used on its own.")
+def check_conflicts(parsed_args):
+    """
+    Checks for conflicts between command-line arguments.
+
+    Args:
+        parsed_args (argparse.Namespace): The parsed command-line arguments.
+
+    Conflicts Checked:
+    - The --default-events and --all-events flags cannot be used together.
+    - The --default-events flag cannot be used with any other event-specific flags.
+    - The --all-events flag cannot be used with any other event-specific flags.
+
+    Usage:
+        check_conflicts(parsed_args)
+
+    Example:
+        parsed_args = parser.parse_args()
+        check_conflicts(parsed_args)
+    """
+
+    arg_list = [
+        parsed_args.push,
+        parsed_args.pullrequest,
+        parsed_args.issues,
+        parsed_args.fork,
+        parsed_args.watch,
+        parsed_args.create,
+        parsed_args.release,
+        parsed_args.delete
+    ]
+
+    if parsed_args.default_events and parsed_args.all_events:
+        print("Error: The --default-events and --all-events flags cannot be used together.")
         sys.exit(1)
 
-    elif args.all_events and any([args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete]):
+    if parsed_args.default_events and any(arg_list):
+        print("The --default-events flag can only be used on its own.")
+        sys.exit(1)
+
+    elif args.all_events and any(arg_list):
         print("The --all-events flag can only be used on its own.")
-        sys.exit(1)    
+        sys.exit(1)
 
 def fetch_github_data(username):
+    """
+    Fetches the public events from the GitHub API for a specified user.
+
+    Args:
+        username (str): The GitHub username for which to fetch events.
+
+    Returns:
+        list: A list of dictionaries containing the event data from the GitHub API.    
+
+    Example:
+        data = fetch_github_data("octocat")
+    """
+
     try:
-        response = requests.get(f"https://api.github.com/users/{username}/events")
+        response = requests.get(f"https://api.github.com/users/{username}/events", timeout=10)
         return response.json()
-    except Exception as e:
+    except requests.exceptions.Timeout:
+        print("Error: Request timed out. Please try again later.")
+        sys.exit(1)
+    except requests.exceptions.ConnectionError:
+        print("Error: Connection error. Please check your internet connection.")
+        sys.exit(1)
+    except requests.exceptions.RequestException as e:
         print(f"Error: Unable to fetch data from GitHub API. {e}")
         sys.exit(1)
 
@@ -130,6 +228,15 @@ repo_event_info = [
 ]
 
 def push_event():
+    """
+    Processes PushEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed PushEvent data.
+
+    Example:
+        push_event()    
+    """
+
     repo_names = set()
     repo_data = []
     event_exists = False
@@ -157,14 +264,23 @@ def push_event():
                     if repo['repo_name'] == event['repo']['name']:
                         repo['repo_msgs'].extend(commit_msg)
 
-            event_exists = True        
+            event_exists = True
 
-    if event_exists:        
+    if event_exists:
         repo_event_info[0]['info'] = repo_data
-    else:        
+    else:
         repo_event_info[0]['info'] = "Event does not exist"
 
 def pull_request_event():
+    """
+    Processes PullRequestEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed PullRequestEvent data.
+
+    Example:
+        pull_request_event()
+    """
+
     repo_names = set()
     repo_data = []
     event_exists = False
@@ -190,14 +306,22 @@ def pull_request_event():
                             "timestamp": event['created_at'][0:10]
                         })
 
-            event_exists = True            
+            event_exists = True
 
-    if event_exists:        
+    if event_exists:
         repo_event_info[1]['info'] = repo_data
-    else:        
-        repo_event_info[1]['info'] = "Event does not exist"   
+    else:
+        repo_event_info[1]['info'] = "Event does not exist"
 
 def issues_event():
+    """
+    Processes IssuesEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed IssuesEvent data.
+
+    Example:
+        issues_event()
+    """
     repo_names = set()
     repo_data = []
     event_exists = False
@@ -225,12 +349,20 @@ def issues_event():
 
             event_exists = True
 
-    if event_exists:        
+    if event_exists:
         repo_event_info[2]['info'] = repo_data
-    else:        
+    else:
         repo_event_info[2]['info'] = "Event does not exist"
 
 def fork_event():
+    """
+    Processes ForkEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed ForkEvent data.
+
+    Example:
+        fork_event()
+    """
     repo_data = []
     event_exists = False
 
@@ -243,13 +375,22 @@ def fork_event():
             })
 
             event_exists = True
-    
-    if event_exists:        
+
+    if event_exists:
         repo_event_info[3]['info'] = repo_data
-    else:        
+    else:
         repo_event_info[3]['info'] = "Event does not exist"
 
 def watch_event():
+    """
+    Processes WatchEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed WatchEvent data.
+
+    Example:
+        watch_event()
+    """
+
     repo_data = []
     event_exists = False
 
@@ -263,12 +404,21 @@ def watch_event():
 
             event_exists = True
 
-    if event_exists:        
+    if event_exists:
         repo_event_info[4]['info'] = repo_data
-    else:        
+    else:
         repo_event_info[4]['info'] = "Event does not exist"
 
 def create_event():
+    """
+    Processes CreateEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed CreateEvent data.
+
+    Example:
+        create_event()
+    """
+
     repo_data = []
     event_exists = False
 
@@ -281,12 +431,20 @@ def create_event():
 
             event_exists = True
 
-    if event_exists:        
+    if event_exists:
         repo_event_info[5]['info'] = repo_data
-    else:        
-        repo_event_info[5]['info'] = "Event does not exist" 
+    else:
+        repo_event_info[5]['info'] = "Event does not exist"
 
 def release_event():
+    """
+    Processes ReleaseEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed ReleaseEvent data.
+
+    Example:
+        release_event()
+    """
     repo_data = []
     event_exists = False
 
@@ -301,12 +459,20 @@ def release_event():
 
             event_exists = True
 
-    if event_exists:        
+    if event_exists:
         repo_event_info[6]['info'] = repo_data
-    else:        
+    else:
         repo_event_info[6]['info'] = "Event does not exist"
 
 def delete_event():
+    """
+    Processes DeleteEvent data from the fetched GitHub events and organizes it by repository.
+
+    Updates the global `repo_event_info` list with the processed DeleteEvent data.
+
+    Example:
+        delete_event()
+    """
     repo_data = []
     event_exists = False
 
@@ -321,133 +487,161 @@ def delete_event():
 
             event_exists = True
 
-    if event_exists:        
+    if event_exists:
         repo_event_info[7]['info'] = repo_data
-    else:        
+    else:
         repo_event_info[7]['info'] = "Event does not exist"
 
 def display_events():
+    """
+    Displays the processed GitHub events organized by repository.
+
+    This function iterates over the `repo_event_info` list and prints out the details of each event
+    grouped by repository.
+
+    Example:
+        display_events()
+    """
+
     if repo_event_info[0]['info'] is None:
         pass
-    elif repo_event_info[0]['info'] == " Event does not exist":
+    elif repo_event_info[0]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] Push event not found.[/bold red]\n")
+        console.print(" [bold red]Push event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] Push Events[/bold green] " + "[bold green]=[/bold green]"* 60)
+        console.print(" [bold green]Push Events[/bold green] " + "[bold green]=[/bold green]"* 60)
         print()
         for repo in repo_event_info[0]['info']:
-            console.print(f"[bold cyan] Pushed {len(repo['repo_msgs'])} commit(s) to {repo['repo_name']}[/bold cyan]")
+            console.print(f" [bold cyan]Pushed {len(repo['repo_msgs'])} commit(s) to {repo['repo_name']}[/bold cyan]")
             for message in repo['repo_msgs']:
                 console.print(f" - [magenta][{message['timestamp']}][/magenta] {message['message']}.")
             print()
 
     if repo_event_info[1]['info'] is None:
         pass
-    elif repo_event_info[1]['info'] == " Event does not exist":
+    elif repo_event_info[1]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] PullRequest event not found.[/bold red]\n")
+        console.print(" [bold red]PullRequest event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] PullRequest Events[/bold green] " + "[bold green]=[/bold green]"* 60)        
+        console.print(" [bold green]PullRequest Events[/bold green] " + "[bold green]=[/bold green]"* 60)        
         print()
         for repo in repo_event_info[1]['info']:
-            console.print(f"[bold cyan] {repo['repo_name']}[/bold cyan]")
+            console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
             for pr in repo['pr_info']:
-                console.print(f" - [magenta][{pr['timestamp']}][/magenta] {pr['action'].capitalize()} PR: {[pr['title']]}")
+                console.print(f" - [magenta][{pr['timestamp']}][/magenta] {pr['action'].capitalize()} PR: {pr['title']}")
             print()
 
     if repo_event_info[2]['info'] is None:
         pass
-    elif repo_event_info[2]['info'] == " Event does not exist":
+    elif repo_event_info[2]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] Issues event not found.[/bold red]\n")
+        console.print(" [bold red]Issues event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] Issues Events[/bold green] " + "[bold green]=[/bold green]"* 60)
+        console.print(" [bold green]Issues Events[/bold green] " + "[bold green]=[/bold green]"* 60)
         print()
         for repo in repo_event_info[2]['info']:
             console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
             for issue in repo['issue_info']:
-                console.print(f" - [magenta][{issue['timestamp']}][/magenta] {issue['action'].capitalize()} Issue: {[issue['title']]}")
+                console.print(f" - [magenta][{issue['timestamp']}][/magenta] {issue['action'].capitalize()} Issue: {issue['title']}")
             print()
 
     if repo_event_info[3]['info'] is None:
         pass
-    elif repo_event_info[3]['info'] == " Event does not exist":
+    elif repo_event_info[3]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] Fork event not found.[/bold red]\n")
+        console.print(" [bold red]Fork event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] Fork Events[/bold green] " + "[bold green]=[/bold green]"* 60)
+        console.print(" [bold green]Fork Events[/bold green] " + "[bold green]=[/bold green]"* 60)
         print()
-        for repo in repo_event_info[3]['info']:                        
-            console.print(f" - [magenta][{issue['timestamp']}][/magenta] Forked [bold cyan]{repo['repo_name']} [/bold cyan]to [bold cyan]{repo['forked_repo_name']}[/bold cyan]")
+        for repo in repo_event_info[3]['info']:
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Forked [bold cyan]{repo['repo_name']} [/bold cyan]to [bold cyan]{repo['forked_repo_name']}[/bold cyan]")
             print()
 
     if repo_event_info[4]['info'] is None:
         pass
-    elif repo_event_info[4]['info'] == " Event does not exist":
+    elif repo_event_info[4]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] Watch event not found.[/bold red]\n")
+        console.print(" [bold red]Watch event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] Watch Events[/bold green] " + "[bold green]=[/bold green]"* 60)
+        console.print(" [bold green]Watch Events[/bold green] " + "[bold green]=[/bold green]"* 60)
         print()
-        for repo in repo_event_info[4]['info']:                    
-            console.print(f" - [magenta][{issue['timestamp']}][/magenta] Starred [bold cyan]{repo['repo_name']}[/bold cyan]")
+        for repo in repo_event_info[4]['info']:
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Starred [bold cyan]{repo['repo_name']}[/bold cyan]")
             print()
 
     if repo_event_info[5]['info'] is None:
         pass
-    elif repo_event_info[5]['info'] == " Event does not exist":
+    elif repo_event_info[5]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] Create event not found.[/bold red]\n")
+        console.print(" [bold red]Create event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] Create Events[/bold green] " + "[bold green]=[/bold green]"* 60)
+        console.print(" [bold green]Create Events[/bold green] " + "[bold green]=[/bold green]"* 60)
         print()
-        for repo in repo_event_info[5]['info']:                    
-            console.print(f" - [magenta][{issue['timestamp']}][/magenta] Created new repository [bold cyan]{repo['repo_name']}[/bold cyan]")
+        for repo in repo_event_info[5]['info']:
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Created new repository [bold cyan]{repo['repo_name']}[/bold cyan]")
             print()
 
     if repo_event_info[6]['info'] is None:
         pass
-    elif repo_event_info[6]['info'] == " Event does not exist":
+    elif repo_event_info[6]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] Release event not found.[/bold red]\n")
+        console.print(" [bold red]Release event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] Release Events[/bold green] " + "[bold green]=[/bold green]"* 60)
+        console.print(" [bold green]Release Events[/bold green] " + "[bold green]=[/bold green]"* 60)
         print()
         for repo in repo_event_info[6]['info']:
-            console.print(f"[bold cyan] {repo['repo_name']}[/bold cyan]")      
-            console.print(f" - [magenta][{issue['timestamp']}][/magenta] Release: {repo['release_name']} (Tag: {repo['tag_name']})")
+            console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Release: {repo['release_name']} (Tag: {repo['tag_name']})")
             print()
 
     if repo_event_info[7]['info'] is None:
         pass
-    elif repo_event_info[7]['info'] == " Event does not exist":
+    elif repo_event_info[7]['info'] == "Event does not exist":
         print()
-        console.print("[bold red] Delete event not found.[/bold red]\n")
+        console.print(" [bold red]Delete event not found.[/bold red]\n")
     else:
         print()
-        console.print(f"[bold green] Delete Events[/bold green] " + "[bold green]=[/bold green]"* 60)
+        console.print(" [bold green]Delete Events[/bold green] " + "[bold green]=[/bold green]"* 60)
         print()
         for repo in repo_event_info[7]['info']:
-            console.print(f"[bold cyan] {repo['repo_name']}[/bold cyan]")      
-            console.print(f" - [magenta][{issue['timestamp']}][/magenta] Deleted {repo['ref_type']}: {repo['ref']}")
+            console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Deleted {repo['ref_type']}: {repo['ref']}")
             print()
 
 def main():
+    """
+    The main function that orchestrates the processing and displaying of GitHub events.
+
+    This function fetches GitHub events, processes various types of events and then
+    displays the organized event information by repository.    
+
+    Steps involved:
+    1. Fetch GitHub events.
+    2. Process each type of event and aggregate data by repository.
+    3. Display the processed events.
+
+    Example:
+        main()
+    """
+
     check_conflicts(args)
+
+    if not any([args.default_events, args.all_events, args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete]):
+        args.default_events = True
 
     if args.default_events:
         push_event()
         pull_request_event()
         issues_event()
         fork_event()
-        watch_event()        
+        watch_event()
 
     elif args.all_events:
         push_event()
@@ -457,7 +651,7 @@ def main():
         watch_event()
         create_event()
         release_event()
-        delete_event()        
+        delete_event()
 
     else:
         if args.push:
@@ -477,7 +671,7 @@ def main():
         if args.delete:
             delete_event()
 
-    display_events()          
+    display_events()
 
 if __name__ == "__main__":
     main()
