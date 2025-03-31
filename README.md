@@ -1,4 +1,4 @@
-# Github User Activity
+# Github Event Fetcher
 
 A command-line tool to fetch and display various GitHub events for a specified user.
 
