@@ -3,11 +3,11 @@
 A command-line tool to fetch and display various GitHub events for a specified user.
 
 ## Features
-- Fetch main GitHub events such as Push, PullRequest, Issues, Fork, and Watch
-- Option to fetch all events including Create, Release, and Delete events
-- Filter events by type using specific flags
-- Combine multiple flags to customize the events fetched
-- Display events in a user-friendly format using rich text formatting
+- Fetch main GitHub events such as Push, PullRequest, Issues, Fork, and Watch.
+- Option to fetch all events including Create, Release, and Delete events.
+- Filter events by type using specific flags.
+- Combine multiple flags to customize the events fetched.
+- Display events in a user-friendly format using rich text formatting.
 
 ## Installation
 1. **Ensure Python is installed (Python 3.x recommended).**
@@ -21,17 +21,17 @@ A command-line tool to fetch and display various GitHub events for a specified u
 python github-cli.py username <github_username> <flag(s)>
 ```
 ### Available flags:
-- `--help`: Show the help message
-- `--default-events`: Fetch only the main events (Push, PullRequest, Issues, Fork, Watch)
-- `--all-events`: Fetch every type of event
-- `--push`: Fetch Push events
-- `--pullrequest`: Fetch Pull Request events
-- `--issues`: Fetch Issues events
-- `--fork`: Fetch Fork events
-- `--watch`: Fetch Watch events
-- `--create`: Fetch Create events
-- `--release`: Fetch Release events
-- `--delete`: Fetch Delete events
+- `--help`: Show the help message.
+- `--default-events`: Fetch only the main events (Push, PullRequest, Issues, Fork, Watch).
+- `--all-events`: Fetch every type of event.
+- `--push`: Fetch Push events.
+- `--pullrequest`: Fetch Pull Request events.
+- `--issues`: Fetch Issues events.
+- `--fork`: Fetch Fork events.
+- `--watch`: Fetch Watch events.
+- `--create`: Fetch Create events.
+- `--release`: Fetch Release events.
+- `--delete`: Fetch Delete events.
 
 ### Examples:
 1. To fetch the standard events:
