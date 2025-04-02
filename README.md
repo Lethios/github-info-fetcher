@@ -24,7 +24,7 @@ python github-cli.py search <github_username>
 ```
 Fetch Github Events Info:
 ```bash
-python github-cli.py username <github_username> <flag(s)>
+python github-cli.py event <github_username> <flag(s)>
 ```
 
 ### Available flags:
@@ -47,24 +47,24 @@ python github-cli.py username <github_username> <flag(s)>
    ```
 2. To fetch the standard events:
    ```bash
-   python github-cli.py username <github_username> --default-events
+   python github-cli.py event <github_username> --default-events
    ```
 3. To fetch every event:
    ```bash
-   python github-cli.py username <github_username> --all-events
+   python github-cli.py event <github_username> --all-events
    ```
 4. To fetch only push events:
    ```bash
-   python github-cli.py username <github_username> --push
+   python github-cli.py event <github_username> --push
    ```
 5. To fetch pull request and issues events:
    ```bash
-   python github-cli.py username <github_username> --pullrequest --issues
+   python github-cli.py event <github_username> --pullrequest --issues
    ```
 
 # Notes:
 - This program fetches events from GitHub, so a **valid internet connection** is required.
-- The events are displayed with *rich text formatting* for better readability.
+- The events are displayed with **rich text formatting** for better readability.
 
 ## Author
 
