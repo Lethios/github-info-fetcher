@@ -1,6 +1,4 @@
-# Github Info Fetcher
-
-Github Info Fetcher is a command-line tool that allows users to fetch and retrieve user profile information and display various GitHub events for a specified user.
+![github-info-fetcher](https://socialify.git.ci/Lethios/github-info-fetcher/image?custom_description=Easily+fetch+GitHub+user+profiles+and+event+history+right+from+your+terminal.&description=1&language=1&name=1&owner=1&pattern=Formal+Invitation&theme=Light)
 
 ## Features
 - Fetch GitHub user profile information.
