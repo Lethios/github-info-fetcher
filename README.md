@@ -1,8 +1,9 @@
-# Github Event Fetcher
+# Github Info Fetcher
 
-A command-line tool to fetch and display various GitHub events for a specified user.
+Github Info Fetcher is a command-line tool that allows users to fetch and retrieve user profile information and display various GitHub events for a specified user.
 
 ## Features
+- Fetch GitHub user profile information.
 - Fetch main GitHub events such as Push, PullRequest, Issues, Fork, and Watch.
 - Option to fetch all events including Create, Release, and Delete events.
 - Filter events by type using specific flags.
@@ -17,9 +18,15 @@ A command-line tool to fetch and display various GitHub events for a specified u
    ```
 
 ## Usage
+Fetch Github User Profile Info:
+```bash
+python github-cli.py search <github_username>
+```
+Fetch Github Events Info:
 ```bash
 python github-cli.py username <github_username> <flag(s)>
 ```
+
 ### Available flags:
 - `--help`: Show the help message.
 - `--default-events`: Fetch only the main events (Push, PullRequest, Issues, Fork, Watch).
@@ -34,19 +41,23 @@ python github-cli.py username <github_username> <flag(s)>
 - `--delete`: Fetch Delete events.
 
 ### Examples:
-1. To fetch the standard events:
+1. To fetch user profile info:
+   ```bash
+   python github-cli.py search <github_username>
+   ```
+2. To fetch the standard events:
    ```bash
    python github-cli.py username <github_username> --default-events
    ```
-2. To fetch every event:
+3. To fetch every event:
    ```bash
    python github-cli.py username <github_username> --all-events
    ```
-3. To fetch only push events:
+4. To fetch only push events:
    ```bash
    python github-cli.py username <github_username> --push
    ```
-4. To fetch pull request and issues events:
+5. To fetch pull request and issues events:
    ```bash
    python github-cli.py username <github_username> --pullrequest --issues
    ```
