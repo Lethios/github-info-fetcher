@@ -460,7 +460,7 @@ def display_events():
         console.print(f" [bold purple]Email:[/bold purple] {user_info['email']}")
         print()
 
-        console.print(f" [bold blue]Twitter:[/bold blue] @{user_info['twitter_username']}")
+        console.print(f" [bold blue]Twitter:[/bold blue] {user_info['twitter_username']}")
         print()
 
         console.print(f" [bold orange3]Followers:[/bold orange3] [white]{user_info['followers']}")
