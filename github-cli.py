@@ -136,9 +136,13 @@ def fetch_github_repo(queries):
 
 def handle_search_command():
     data = fetch_github_user(args.search)    
-    
-    print()
-    console.print(f" [bold cyan]Displaying Github User Info of {data['login']}[/bold cyan]")
+
+    try:
+        print()
+        console.print(f" [bold cyan]Displaying Github User Info of {data['login']}[/bold cyan]")
+    except:
+        print("Error: User not found.")
+        sys.exit(1)
     print()
 
     console.print(f" [bold green]Username:[/bold green] {data['login']}")
