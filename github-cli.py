@@ -40,7 +40,7 @@ HELP_MESSAGE = """
 
 [bold green] Examples:[/bold green]
 
- 1. To fetch GitHub user information:
+ 1. To fetch GitHub user profile information:
     [bold yellow] python github-cli.py search Lethios[/bold yellow]
 
  2. To fetch the standard events:
