@@ -478,7 +478,7 @@ def display_events():
             console.print(" [bold red]Push event not found.[/bold red]\n")
         else:
             print()
-            console.print(" [bold green]Push Events[/bold green] " + "[bold green]=[/bold green]"* 80)
+            console.print(" [bold green]Push Events[/bold green] " + "[bold green]=[/bold green]" * 80)
             print()
             for repo in repo_event_info[0]['info']:
                 console.print(f" [bold cyan]Pushed {len(repo['repo_msgs'])} commit(s) to {repo['repo_name']}[/bold cyan]")
@@ -493,7 +493,7 @@ def display_events():
             console.print(" [bold red]PullRequest event not found.[/bold red]\n")
         else:
             print()
-            console.print(" [bold green]PullRequest Events[/bold green] " + "[bold green]=[/bold green]"* 73)        
+            console.print(" [bold green]PullRequest Events[/bold green] " + "[bold green]=[/bold green]" * 73)        
             print()
             for repo in repo_event_info[1]['info']:
                 console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
@@ -508,7 +508,7 @@ def display_events():
             console.print(" [bold red]Issues event not found.[/bold red]\n")
         else:
             print()
-            console.print(" [bold green]Issues Events[/bold green] " + "[bold green]=[/bold green]"* 78)
+            console.print(" [bold green]Issues Events[/bold green] " + "[bold green]=[/bold green]" * 78)
             print()
             for repo in repo_event_info[2]['info']:
                 console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
@@ -523,7 +523,7 @@ def display_events():
             console.print(" [bold red]Fork event not found.[/bold red]\n")
         else:
             print()
-            console.print(" [bold green]Fork Events[/bold green] " + "[bold green]=[/bold green]"* 80)
+            console.print(" [bold green]Fork Events[/bold green] " + "[bold green]=[/bold green]" * 80)
             print()
             for repo in repo_event_info[3]['info']:
                 console.print(f" - [magenta][{repo['timestamp']}][/magenta] Forked [bold cyan]{repo['repo_name']} [/bold cyan]to [bold cyan]{repo['forked_repo_name']}[/bold cyan]")
@@ -536,7 +536,7 @@ def display_events():
             console.print(" [bold red]Watch event not found.[/bold red]\n")
         else:
             print()
-            console.print(" [bold green]Watch Events[/bold green] " + "[bold green]=[/bold green]"* 79)
+            console.print(" [bold green]Watch Events[/bold green] " + "[bold green]=[/bold green]" * 79)
             print()
             for repo in repo_event_info[4]['info']:
                 console.print(f" - [magenta][{repo['timestamp']}][/magenta] Starred [bold cyan]{repo['repo_name']}[/bold cyan]")
@@ -549,7 +549,7 @@ def display_events():
             console.print(" [bold red]Create event not found.[/bold red]\n")
         else:
             print()
-            console.print(" [bold green]Create Events[/bold green] " + "[bold green]=[/bold green]"* 78)
+            console.print(" [bold green]Create Events[/bold green] " + "[bold green]=[/bold green]" * 78)
             print()
             for repo in repo_event_info[5]['info']:
                 console.print(f" - [magenta][{repo['timestamp']}][/magenta] Created new repository [bold cyan]{repo['repo_name']}[/bold cyan]")
