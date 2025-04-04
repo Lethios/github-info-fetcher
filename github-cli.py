@@ -463,12 +463,12 @@ def display_events():
         console.print(f" [bold blue]Twitter:[/bold blue] {user_info['twitter_username']}")
         print()
 
-        console.print(f" [bold orange3]Followers:[/bold orange3] [white]{user_info['followers']}")
-        console.print(f" [bold orange3]Following:[/bold orange3] [white]{user_info['following']}")
+        console.print(f" [bold orange3]Followers:[/bold orange3] [white not bold]{user_info['followers']}")
+        console.print(f" [bold orange3]Following:[/bold orange3] [white not bold]{user_info['following']}")
         print()
 
-        console.print(f" [bold blue3]Account created on[/bold blue3] [white]{user_info['created']}")
-        console.print(f" [bold blue3]Last updated on[/bold blue3] [white]{user_info['updated']}")
+        console.print(f" [bold blue3]Account created on[/bold blue3] [white not bold]{user_info['created']}")
+        console.print(f" [bold blue3]Last updated on[/bold blue3] [white not bold]{user_info['updated']}")
         print()
 
     elif args.command == "event":    
