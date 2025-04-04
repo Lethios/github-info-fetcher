@@ -37,7 +37,11 @@ python github-cli.py popular [flag(s)]
 ```
 
 ### Available flags:
+
+General
 - `--help`: Show the help message.
+  
+Events Filtering
 - `--default-events`: Fetch only the main events (Push, PullRequest, Issues, Fork, Watch).
 - `--all-events`: Fetch every type of event.
 - `--push`: Fetch Push events.
@@ -48,6 +52,13 @@ python github-cli.py popular [flag(s)]
 - `--create`: Fetch Create events.
 - `--release`: Fetch Release events.
 - `--delete`: Fetch Delete events.
+  
+Popular Repositories Filtering
+- `--language <name>`: Filter by programming language.
+- `--topic <name>`: Filter by topic.
+- `--after <YYYY-MM-DD>`: Filter repositories created after a specific date.
+- `--min-stars <number>`: Filter by minimum star count.
+- `--limit <number>`: Limit the number of results.
 
 ### Examples:
 1. To fetch user profile info:
