@@ -10,16 +10,16 @@ HELP_MESSAGE = """
  This program allows you to fetch GitHub user information and activity events directly in your terminal.
 
 [bold green] Usage:[/bold green]
-[bold yellow] python github-cli.py <command> <github_username> <flag(s)>[/bold yellow]
+[bold yellow] python github-cli.py <command>[/bold yellow]
 
 [bold green] Available Commands:[/bold green]
 
+[bold magenta] help[/bold magenta]        Display this help message.
 [bold magenta] search[/bold magenta]      Fetch and display GitHub user profile information.
-[bold magenta] event[/bold magenta]       Fetch and display GitHub user activity events.
+[bold magenta] events[/bold magenta]      Fetch and display GitHub user activity events.
+[bold magenta] popular[/bold magenta]     Discover popular repositories using optional filters.
 
-[bold green] Flags (For "event" command):[/bold green]
-
-[bold magenta] --help[/bold magenta]             Show this help message.
+[bold green] Flags for "events" command:[/bold green]
 [bold magenta] --default-events[/bold magenta]   Fetch only the main events (Push, PullRequest, Issues, Fork, Watch).
 [bold magenta] --all-events[/bold magenta]       Fetch every type of event.
 [bold magenta] --push[/bold magenta]             Fetch Push events.
@@ -31,23 +31,27 @@ HELP_MESSAGE = """
 [bold magenta] --release[/bold magenta]          Fetch Release events.
 [bold magenta] --delete[/bold magenta]           Fetch Delete events.
 
+[bold green] Flags for "popular" command:[/bold green]
+[bold magenta] --language[/bold magenta]         Filter by programming language.
+[bold magenta] --topic[/bold magenta]            Filter by repository topic.
+[bold magenta] --after[/bold magenta]            Filter repositories created after this date (YYYY-MM-DD).
+[bold magenta] --min_stars[/bold magenta]        Filter repositories with at least this many stars.
+[bold magenta] --limit[/bold magenta]            Limit the number of results shown (max 100).
+
 [bold green] Examples:[/bold green]
 
- 1. Fetch GitHub user information:
+ 1. To fetch GitHub user information:
     [bold yellow] python github-cli.py search Lethios[/bold yellow]
 
- 2. Fetch the standard events:
-    [bold yellow] python github-cli.py event Lethios[/bold yellow] or
-    [bold yellow] python github-cli.py event Lethios --default-events[/bold yellow]
+ 2. To fetch the standard events:
+    [bold yellow] python github-cli.py events Lethios[/bold yellow] or
+    [bold yellow] python github-cli.py events Lethios --default-events[/bold yellow]
 
- 3. Fetch all available events:
-    [bold yellow] python github-cli.py event Lethios --all-events[/bold yellow]
+ 3. To fetch pull request and issues events:
+    [bold yellow] python github-cli.py events Lethios --pullrequest --issues[/bold yellow]
 
- 4. Fetch only push events:
-    [bold yellow] python github-cli.py event Lethios --push[/bold yellow]
-
- 5. Fetch pull request and issues events:
-    [bold yellow] python github-cli.py event Lethios --pullrequest --issues[/bold yellow]
+ 4. To discover popular Python CLI repos with 200+ stars since 2023:
+    [bold yellow] python github-cli.py popular --language python --topic cli --min-stars 200 --since 2023-01-01[/bold yellow]
 
 [bold magenta] Additional Information:[/bold magenta] 
  - Events display relevant details such as repository, message, and timestamp.
@@ -66,18 +70,18 @@ subparser = parser.add_subparsers(dest="command")
 search_parser = subparser.add_parser("search")
 search_parser.add_argument("search")
 
-event_parser = subparser.add_parser("event")
-event_parser.add_argument("event")
-event_parser.add_argument("--default-events", action="store_true")
-event_parser.add_argument("--all-events", action="store_true")
-event_parser.add_argument("--push", action="store_true")
-event_parser.add_argument("--pullrequest", action="store_true")
-event_parser.add_argument("--issues", action="store_true")
-event_parser.add_argument("--fork", action="store_true")
-event_parser.add_argument("--watch", action="store_true")
-event_parser.add_argument("--create", action="store_true")
-event_parser.add_argument("--release", action="store_true")
-event_parser.add_argument("--delete", action="store_true")
+events_parser = subparser.add_parser("events")
+events_parser.add_argument("events")
+events_parser.add_argument("--default-events", action="store_true")
+events_parser.add_argument("--all-events", action="store_true")
+events_parser.add_argument("--push", action="store_true")
+events_parser.add_argument("--pullrequest", action="store_true")
+events_parser.add_argument("--issues", action="store_true")
+events_parser.add_argument("--fork", action="store_true")
+events_parser.add_argument("--watch", action="store_true")
+events_parser.add_argument("--create", action="store_true")
+events_parser.add_argument("--release", action="store_true")
+events_parser.add_argument("--delete", action="store_true")
 
 popular_parser = subparser.add_parser("popular")
 popular_parser.add_argument("--language", action="store")
@@ -198,7 +202,7 @@ def handle_event_command():
         {"type": "DeleteEvent", "info": None}
     ]    
     
-    data = fetch_github_activity(args.event)    
+    data = fetch_github_activity(args.events)    
     
     if not any([args.default_events, args.all_events, args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete]):
         args.default_events = True
@@ -549,6 +553,14 @@ def handle_event_command():
             print()
 
 def handle_popular_command():
+    def check_conflicts(parsed_args):
+        conflicted_flags = [parsed_args.language, parsed_args.topic, parsed_args.after, parsed_args.min_stars]
+        if args.limit is not None and all(flag is None for flag in conflicted_flags):
+            print("Error: The --limit flag cannot be used as the only flag.")
+            sys.exit(1)
+
+    check_conflicts(args)
+
     flags = [args.language, args.topic, args.after, args.min_stars, args.limit]
 
     if all(flag is None for flag in flags):
@@ -604,7 +616,7 @@ def handle_popular_command():
 def main():
     if args.command == "search":
         handle_search_command()
-    elif args.command == "event":
+    elif args.command == "events":
         handle_event_command()
     elif args.command == "popular":
         handle_popular_command()
