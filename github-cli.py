@@ -60,7 +60,7 @@ HELP_MESSAGE = """
 [bold red] Note:[/bold red] This program fetches data from GitHub, so a valid internet connection is required.
 """
 
-if "--help" == sys.argv[1] or "help" == sys.argv[1]:
+if "help" == sys.argv[1] or "--help" == sys.argv[1]:
     console.print(HELP_MESSAGE)
     sys.exit(0)
 
