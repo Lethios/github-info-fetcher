@@ -568,7 +568,7 @@ def handle_popular_command():
     flags = [args.language, args.topic, args.after, args.min_stars, args.limit]
 
     if all(flag is None for flag in flags):
-        queries = "?q=stars:>1000&sort=stars&order=desc"
+        queries = "?q=stars:>1000&per_page=5&sort=stars&order=desc"
         data = fetch_github_repo(queries)
     else:
         dict = {
