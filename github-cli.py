@@ -130,30 +130,6 @@ def fetch_github_repo(queries):
         print(f"Error: Unable to fetch data from GitHub API. {e}")
         sys.exit(1)
 
-def check_conflicts(parsed_args):
-    arg_list = [
-        parsed_args.push,
-        parsed_args.pullrequest,
-        parsed_args.issues,
-        parsed_args.fork,
-        parsed_args.watch,
-        parsed_args.create,
-        parsed_args.release,
-        parsed_args.delete
-    ]
-
-    if parsed_args.default_events and parsed_args.all_events:
-        print("Error: The --default-events and --all-events flags cannot be used together.")
-        sys.exit(1)
-
-    if parsed_args.default_events and any(arg_list):
-        print("The --default-events flag can only be used on its own.")
-        sys.exit(1)
-
-    elif parsed_args.all_events and any(arg_list):
-        print("The --all-events flag can only be used on its own.")
-        sys.exit(1)
-
 def handle_search_command():
     data = fetch_github_user(args.search)    
     
@@ -184,7 +160,31 @@ def handle_search_command():
     console.print(f" [bold blue3]Last updated on[/bold blue3] [white not bold]{data['updated_at'][0:10]}")
     print()
 
-def handle_event_command():
+def handle_event_command():    
+    def check_conflicts(parsed_args):
+        arg_list = [
+            parsed_args.push,
+            parsed_args.pullrequest,
+            parsed_args.issues,
+            parsed_args.fork,
+            parsed_args.watch,
+            parsed_args.create,
+            parsed_args.release,
+            parsed_args.delete
+        ]
+
+        if parsed_args.default_events and parsed_args.all_events:
+            print("Error: The --default-events and --all-events flags cannot be used together.")
+            sys.exit(1)
+
+        if parsed_args.default_events and any(arg_list):
+            print("The --default-events flag can only be used on its own.")
+            sys.exit(1)
+
+        elif parsed_args.all_events and any(arg_list):
+            print("The --all-events flag can only be used on its own.")
+            sys.exit(1)
+    
     check_conflicts(args)    
     
     repo_event_info = [
