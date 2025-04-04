@@ -88,30 +88,6 @@ popular_parser.add_argument("--limit", action="store")
 
 args = parser.parse_args()
 
-def check_conflicts(parsed_args):
-    arg_list = [
-        parsed_args.push,
-        parsed_args.pullrequest,
-        parsed_args.issues,
-        parsed_args.fork,
-        parsed_args.watch,
-        parsed_args.create,
-        parsed_args.release,
-        parsed_args.delete
-    ]
-
-    if parsed_args.default_events and parsed_args.all_events:
-        print("Error: The --default-events and --all-events flags cannot be used together.")
-        sys.exit(1)
-
-    if parsed_args.default_events and any(arg_list):
-        print("The --default-events flag can only be used on its own.")
-        sys.exit(1)
-
-    elif args.all_events and any(arg_list):
-        print("The --all-events flag can only be used on its own.")
-        sys.exit(1)
-
 def fetch_github_user(username):
     try:
         response = requests.get(f"https://api.github.com/users/{username}", timeout=10)
@@ -154,62 +130,425 @@ def fetch_github_repo(queries):
         print(f"Error: Unable to fetch data from GitHub API. {e}")
         sys.exit(1)
 
-if args.command == "search":
-    data = fetch_github_user(args.search)
-    user_info = {
-        "username": data['login'],
-        "name": data['name'],
-        "link": data['html_url'],
-        "bio": data['bio'],
-        "location": data['location'],
-        "blog": data['blog'],
-        "email": data['email'],
-        "twitter_username": data['twitter_username'],
-        "public_repos": data['public_repos'],
-        "followers": data['followers'],
-        "following": data['following'],
-        "created": data['created_at'][0:10],
-        "updated": data['updated_at'][0:10]
-    }
-
-elif args.command == "event":
-    data = fetch_github_activity(args.event)
-    repo_event_info = [
-        {
-            "type": "PushEvent",
-            "info": None
-        },
-        {
-            "type": "PullRequestEvent",
-            "info": None
-        },
-        {
-            "type": "IssuesEvent",
-            "info": None
-        },
-        {
-            "type": "ForkEvent",
-            "info": None
-        },
-        {
-            "type": "WatchEvent",
-            "info": None
-        },
-        {
-            "type": "CreateEvent",
-            "info": None
-        },
-        {
-            "type": "ReleaseEvent",
-            "info": None
-        },
-        {
-            "type": "DeleteEvent",
-            "info": None
-        }
+def check_conflicts(parsed_args):
+    arg_list = [
+        parsed_args.push,
+        parsed_args.pullrequest,
+        parsed_args.issues,
+        parsed_args.fork,
+        parsed_args.watch,
+        parsed_args.create,
+        parsed_args.release,
+        parsed_args.delete
     ]
 
-elif args.command == "popular":
+    if parsed_args.default_events and parsed_args.all_events:
+        print("Error: The --default-events and --all-events flags cannot be used together.")
+        sys.exit(1)
+
+    if parsed_args.default_events and any(arg_list):
+        print("The --default-events flag can only be used on its own.")
+        sys.exit(1)
+
+    elif parsed_args.all_events and any(arg_list):
+        print("The --all-events flag can only be used on its own.")
+        sys.exit(1)
+
+def handle_search_command():
+    data = fetch_github_user(args.search)    
+    
+    print()
+    console.print(f" [bold cyan]Displaying Github User Info of {data['login']}[/bold cyan]")
+    print()
+
+    console.print(f" [bold green]Username:[/bold green] {data['login']}")
+    console.print(f" [bold green]Name:[/bold green] {data['name'] or "Not provided"}")
+    console.print(f" [bold green]Profile link:[/bold green] {data['html_url']}")
+    print()
+
+    console.print(f" [bold magenta]Bio:[/bold magenta] {data['bio'] or "Not provided"}")
+    console.print(f" [bold magenta]Location:[/bold magenta] {data['location'] or "Not provided"}")
+    print()
+
+    console.print(f" [bold purple]Email:[/bold purple] {data['email'] or "Not provided"}")
+    print()
+
+    console.print(f" [bold blue]Twitter:[/bold blue] {data['twitter_username'] or "Not provided"}")
+    print()
+
+    console.print(f" [bold orange3]Followers:[/bold orange3] [white not bold]{data['followers']}")
+    console.print(f" [bold orange3]Following:[/bold orange3] [white not bold]{data['following']}")
+    print()
+
+    console.print(f" [bold blue3]Account created on[/bold blue3] [white not bold]{data['created_at'][0:10]}")
+    console.print(f" [bold blue3]Last updated on[/bold blue3] [white not bold]{data['updated_at'][0:10]}")
+    print()
+
+def handle_event_command():
+    check_conflicts(args)    
+    
+    repo_event_info = [
+        {"type": "PushEvent", "info": None},
+        {"type": "PullRequestEvent", "info": None},
+        {"type": "IssuesEvent", "info": None},
+        {"type": "ForkEvent", "info": None},
+        {"type": "WatchEvent", "info": None},
+        {"type": "CreateEvent", "info": None},
+        {"type": "ReleaseEvent", "info": None},
+        {"type": "DeleteEvent", "info": None}
+    ]    
+    
+    data = fetch_github_activity(args.event)    
+    
+    if not any([args.default_events, args.all_events, args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete]):
+        args.default_events = True
+    
+    def push_event():
+        repo_names = set()
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "PushEvent":
+                if event['payload']['commits']:
+                    commit_msg = []
+                    for commit in event['payload']['commits']:
+                        commit_msg.append({
+                            "message": commit['message'],
+                            "timestamp": event['created_at'][0:10]
+                        })
+                else:
+                    continue
+
+                if event['repo']['name'] not in repo_names:
+                    repo_names.add(event['repo']['name'])
+                    repo_data.append({
+                        "repo_name": event['repo']['name'],
+                        "repo_msgs": commit_msg
+                    })
+                else:
+                    for repo in repo_data:
+                        if repo['repo_name'] == event['repo']['name']:
+                            repo['repo_msgs'].extend(commit_msg)
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[0]['info'] = repo_data
+        else:
+            repo_event_info[0]['info'] = "Event does not exist"
+
+    def pull_request_event():    
+        repo_names = set()
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "PullRequestEvent":
+                if event['repo']['name'] not in repo_names:
+                    repo_names.add(event['repo']['name'])
+                    repo_data.append({
+                        "repo_name": event['repo']['name'],
+                        "pr_info": [{
+                            "action": event['payload']['action'],
+                            "title": event['payload']['pull_request']['title'],
+                            "timestamp": event['created_at'][0:10]
+                        }]
+                    })
+                else:
+                    for repo in repo_data:
+                        if repo['repo_name'] == event['repo']['name']:
+                            repo['pr_info'].append({
+                                "action": event['payload']['action'],
+                                "title": event['payload']['pull_request']['title'],
+                                "timestamp": event['created_at'][0:10]
+                            })
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[1]['info'] = repo_data
+        else:
+            repo_event_info[1]['info'] = "Event does not exist"
+
+    def issues_event():    
+        repo_names = set()
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "IssuesEvent":
+                if event['repo']['name'] not in repo_names:
+                    repo_names.add(event['repo']['name'])
+                    repo_data.append({
+                        "repo_name": event['repo']['name'],
+                        "issue_info": [{
+                            "action": event['payload']['action'],
+                            "title": event['payload']['issue']['title'],
+                            "timestamp": event['created_at'][0:10]
+                        }]
+                    })
+                else:
+                    for repo in repo_data:
+                        if repo['repo_name'] == event['repo']['name']:
+                            repo['issue_info'].append({
+                                "action": event['payload']['action'],
+                                "title": event['payload']['issue']['title'],
+                                "timestamp": event['created_at'][0:10]
+                            })
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[2]['info'] = repo_data
+        else:
+            repo_event_info[2]['info'] = "Event does not exist"
+
+    def fork_event():    
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "ForkEvent":
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "forked_repo_name": event['payload']['forkee']['full_name'],
+                    "timestamp": event['created_at'][0:10]
+                })
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[3]['info'] = repo_data
+        else:
+            repo_event_info[3]['info'] = "Event does not exist"
+
+    def watch_event():    
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "WatchEvent":
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "action": event['payload']['action'],
+                    "timestamp": event['created_at'][0:10]
+                })
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[4]['info'] = repo_data
+        else:
+            repo_event_info[4]['info'] = "Event does not exist"
+
+    def create_event():    
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "CreateEvent":
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "timestamp": event['created_at'][0:10]
+                })
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[5]['info'] = repo_data
+        else:
+            repo_event_info[5]['info'] = "Event does not exist"
+
+    def release_event():   
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "ReleaseEvent":
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "release_name": event['payload']['name'],
+                    "tag_name": event['payload']['tag_name'],
+                    "timestamp": event['payload']['published_at'][0:10]
+                })
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[6]['info'] = repo_data
+        else:
+            repo_event_info[6]['info'] = "Event does not exist"
+
+    def delete_event():    
+        repo_data = []
+        event_exists = False
+
+        for event in data:
+            if event['type'] == "DeleteEvent":
+                repo_data.append({
+                    "repo_name": event['repo']['name'],
+                    "ref": event['payload']['ref'],
+                    "ref_type": event['payload']['ref_type'],
+                    "timestamp": event['created_at'][0:10]
+                })
+
+                event_exists = True
+
+        if event_exists:
+            repo_event_info[7]['info'] = repo_data
+        else:
+            repo_event_info[7]['info'] = "Event does not exist"    
+    
+    if args.default_events:
+        push_event()
+        pull_request_event()
+        issues_event()
+        fork_event()
+        watch_event()
+    elif args.all_events:
+        push_event()
+        pull_request_event()
+        issues_event()
+        fork_event()
+        watch_event()
+        create_event()
+        release_event()
+        delete_event()
+    else:
+        if args.push:
+            push_event()
+        if args.pullrequest:
+            pull_request_event()
+        if args.issues:
+            issues_event()
+        if args.fork:
+            fork_event()
+        if args.watch:
+            watch_event()
+        if args.create:
+            create_event()
+        if args.release:
+            release_event()
+        if args.delete:
+            delete_event()    
+    
+    print()
+    console.print("{:^100s}".format(f" [bold cyan]Displaying Github Event Activities of {data[0]['actor']['login']}[/bold cyan]"))
+
+    if repo_event_info[0]['info'] is None:
+        pass
+    elif repo_event_info[0]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]Push event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]Push Events[/bold green] " + "[bold green]=[/bold green]" * 80)
+        print()
+        for repo in repo_event_info[0]['info']:
+            console.print(f" [bold cyan]Pushed {len(repo['repo_msgs'])} commit(s) to {repo['repo_name']}[/bold cyan]")
+            for message in repo['repo_msgs']:
+                console.print(f" - [magenta][{message['timestamp']}][/magenta] {message['message']}.")
+            print()
+
+    if repo_event_info[1]['info'] is None:
+        pass
+    elif repo_event_info[1]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]PullRequest event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]PullRequest Events[/bold green] " + "[bold green]=[/bold green]" * 73)        
+        print()
+        for repo in repo_event_info[1]['info']:
+            console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
+            for pr in repo['pr_info']:
+                console.print(f" - [magenta][{pr['timestamp']}][/magenta] {pr['action'].capitalize()} PR: {pr['title']}")
+            print()
+
+    if repo_event_info[2]['info'] is None:
+        pass
+    elif repo_event_info[2]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]Issues event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]Issues Events[/bold green] " + "[bold green]=[/bold green]" * 78)
+        print()
+        for repo in repo_event_info[2]['info']:
+            console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
+            for issue in repo['issue_info']:
+                console.print(f" - [magenta][{issue['timestamp']}][/magenta] {issue['action'].capitalize()} Issue: {issue['title']}")
+            print()
+
+    if repo_event_info[3]['info'] is None:
+        pass
+    elif repo_event_info[3]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]Fork event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]Fork Events[/bold green] " + "[bold green]=[/bold green]" * 80)
+        print()
+        for repo in repo_event_info[3]['info']:
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Forked [bold cyan]{repo['repo_name']} [/bold cyan]to [bold cyan]{repo['forked_repo_name']}[/bold cyan]")
+            print()
+
+    if repo_event_info[4]['info'] is None:
+        pass
+    elif repo_event_info[4]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]Watch event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]Watch Events[/bold green] " + "[bold green]=[/bold green]" * 79)
+        print()
+        for repo in repo_event_info[4]['info']:
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Starred [bold cyan]{repo['repo_name']}[/bold cyan]")
+            print()
+
+    if repo_event_info[5]['info'] is None:
+        pass
+    elif repo_event_info[5]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]Create event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]Create Events[/bold green] " + "[bold green]=[/bold green]" * 78)
+        print()
+        for repo in repo_event_info[5]['info']:
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Created new repository [bold cyan]{repo['repo_name']}[/bold cyan]")
+            print()
+
+    if repo_event_info[6]['info'] is None:
+        pass
+    elif repo_event_info[6]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]Release event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]Release Events[/bold green] " + "[bold green]=[/bold green]"* 77)
+        print()
+        for repo in repo_event_info[6]['info']:
+            console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Release: {repo['release_name']} (Tag: {repo['tag_name']})")
+            print()
+
+    if repo_event_info[7]['info'] is None:
+        pass
+    elif repo_event_info[7]['info'] == "Event does not exist":
+        print()
+        console.print(" [bold red]Delete event not found.[/bold red]\n")
+    else:
+        print()
+        console.print(" [bold green]Delete Events[/bold green] " + "[bold green]=[/bold green]"* 78)
+        print()
+        for repo in repo_event_info[7]['info']:
+            console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
+            console.print(f" - [magenta][{repo['timestamp']}][/magenta] Deleted {repo['ref_type']}: {repo['ref']}")
+            print()
+
+def handle_popular_command():
     flags = [args.language, args.topic, args.after, args.min_stars, args.limit]
 
     if all(flag is None for flag in flags):
@@ -236,428 +575,42 @@ elif args.command == "popular":
 
         queries += "&sort=stars&order=desc"
         data = fetch_github_repo(queries)
+    
+    print()
+    console.print(" [bold cyan]Displaying Popular GitHub Repositories[/bold cyan]")
+    print()
 
-else:
-    print("Invalid arguments.")
-    sys.exit(1)
+    for repo in data['items']:
+        console.print(" " + "[bold cyan]=[/bold cyan]" * 80)      
+        console.print(f" [bold green]Repository name:[/bold green] {repo['name']}")
+        console.print(f" [bold green]Owner:[/bold green] {repo['owner']['login']}")
+        console.print(f" [bold green]Link:[/bold green] {repo['html_url']}")
+        print()
 
-def push_event():
-    repo_names = set()
-    repo_data = []
-    event_exists = False
+        console.print(f" [bold magenta]Description:[/bold magenta] {repo['description']}")
+        console.print(f" [bold magenta]Language:[/bold magenta] {repo['language']}")
+        print()
+        
+        console.print(f" [bold orange3]Watchers:[/bold orange3] [white not bold]{repo['watchers_count']}")
+        console.print(f" [bold red]Forks:[/bold red] [white not bold]{repo['forks_count']}")
+        console.print(f" [bold yellow]Stars:[/bold yellow] [white not bold]{repo['stargazers_count']}")
+        print()
 
-    for event in data:
-        if event['type'] == "PushEvent":
-            if event['payload']['commits']:
-                commit_msg = []
-                for commit in event['payload']['commits']:
-                    commit_msg.append({
-                        "message": commit['message'],
-                        "timestamp": event['created_at'][0:10]
-                    })
-            else:
-                continue
+        console.print(f" [bold blue3]Created on[/bold blue3] [white not bold]{repo['created_at'][0:10]}")
+        console.print(f" [bold blue3]Last updated on[/bold blue3] [white not bold]{repo['updated_at'][0:10]}")
+        console.print(" " + "[bold cyan]=[/bold cyan]" * 80)
+        print()
 
-            if event['repo']['name'] not in repo_names:
-                repo_names.add(event['repo']['name'])
-                repo_data.append({
-                    "repo_name": event['repo']['name'],
-                    "repo_msgs": commit_msg
-                })
-            else:
-                for repo in repo_data:
-                    if repo['repo_name'] == event['repo']['name']:
-                        repo['repo_msgs'].extend(commit_msg)
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[0]['info'] = repo_data
-    else:
-        repo_event_info[0]['info'] = "Event does not exist"
-
-def pull_request_event():    
-    repo_names = set()
-    repo_data = []
-    event_exists = False
-
-    for event in data:
-        if event['type'] == "PullRequestEvent":
-            if event['repo']['name'] not in repo_names:
-                repo_names.add(event['repo']['name'])
-                repo_data.append({
-                    "repo_name": event['repo']['name'],
-                    "pr_info": [{
-                        "action": event['payload']['action'],
-                        "title": event['payload']['pull_request']['title'],
-                        "timestamp": event['created_at'][0:10]
-                    }]
-                })
-            else:
-                for repo in repo_data:
-                    if repo['repo_name'] == event['repo']['name']:
-                        repo['pr_info'].append({
-                            "action": event['payload']['action'],
-                            "title": event['payload']['pull_request']['title'],
-                            "timestamp": event['created_at'][0:10]
-                        })
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[1]['info'] = repo_data
-    else:
-        repo_event_info[1]['info'] = "Event does not exist"
-
-def issues_event():    
-    repo_names = set()
-    repo_data = []
-    event_exists = False
-
-    for event in data:
-        if event['type'] == "IssuesEvent":
-            if event['repo']['name'] not in repo_names:
-                repo_names.add(event['repo']['name'])
-                repo_data.append({
-                    "repo_name": event['repo']['name'],
-                    "issue_info": [{
-                        "action": event['payload']['action'],
-                        "title": event['payload']['issue']['title'],
-                        "timestamp": event['created_at'][0:10]
-                    }]
-                })
-            else:
-                for repo in repo_data:
-                    if repo['repo_name'] == event['repo']['name']:
-                        repo['issue_info'].append({
-                            "action": event['payload']['action'],
-                            "title": event['payload']['issue']['title'],
-                            "timestamp": event['created_at'][0:10]
-                        })
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[2]['info'] = repo_data
-    else:
-        repo_event_info[2]['info'] = "Event does not exist"
-
-def fork_event():    
-    repo_data = []
-    event_exists = False
-
-    for event in data:
-        if event['type'] == "ForkEvent":
-            repo_data.append({
-                "repo_name": event['repo']['name'],
-                "forked_repo_name": event['payload']['forkee']['full_name'],
-                "timestamp": event['created_at'][0:10]
-            })
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[3]['info'] = repo_data
-    else:
-        repo_event_info[3]['info'] = "Event does not exist"
-
-def watch_event():    
-    repo_data = []
-    event_exists = False
-
-    for event in data:
-        if event['type'] == "WatchEvent":
-            repo_data.append({
-                "repo_name": event['repo']['name'],
-                "action": event['payload']['action'],
-                "timestamp": event['created_at'][0:10]
-            })
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[4]['info'] = repo_data
-    else:
-        repo_event_info[4]['info'] = "Event does not exist"
-
-def create_event():    
-    repo_data = []
-    event_exists = False
-
-    for event in data:
-        if event['type'] == "CreateEvent":
-            repo_data.append({
-                "repo_name": event['repo']['name'],
-                "timestamp": event['created_at'][0:10]
-            })
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[5]['info'] = repo_data
-    else:
-        repo_event_info[5]['info'] = "Event does not exist"
-
-def release_event():   
-    repo_data = []
-    event_exists = False
-
-    for event in data:
-        if event['type'] == "ReleaseEvent":
-            repo_data.append({
-                "repo_name": event['repo']['name'],
-                "release_name": event['payload']['name'],
-                "tag_name": event['payload']['tag_name'],
-                "timestamp": event['payload']['published_at'][0:10]
-            })
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[6]['info'] = repo_data
-    else:
-        repo_event_info[6]['info'] = "Event does not exist"
-
-def delete_event():    
-    repo_data = []
-    event_exists = False
-
-    for event in data:
-        if event['type'] == "DeleteEvent":
-            repo_data.append({
-                "repo_name": event['repo']['name'],
-                "ref": event['payload']['ref'],
-                "ref_type": event['payload']['ref_type'],
-                "timestamp": event['created_at'][0:10]
-            })
-
-            event_exists = True
-
-    if event_exists:
-        repo_event_info[7]['info'] = repo_data
-    else:
-        repo_event_info[7]['info'] = "Event does not exist"
-
-def display_events():    
+def main():
     if args.command == "search":
-        print()
-        console.print(f" [bold cyan]Displaying Github User Info of {data['login']}[/bold cyan]")
-        print()
-
-        console.print(f" [bold green]Username:[/bold green] {user_info['username']}")
-        console.print(f" [bold green]Name:[/bold green] {user_info['name']}")
-        console.print(f" [bold green]Profile link:[/bold green] {user_info['link']}")
-        print()
-
-        console.print(f" [bold magenta]Bio:[/bold magenta] {user_info['bio']}")
-        console.print(f" [bold magenta]Location:[/bold magenta] {user_info['location']}")
-        print()
-
-        console.print(f" [bold purple]Email:[/bold purple] {user_info['email']}")
-        print()
-
-        console.print(f" [bold blue]Twitter:[/bold blue] {user_info['twitter_username']}")
-        print()
-
-        console.print(f" [bold orange3]Followers:[/bold orange3] [white not bold]{user_info['followers']}")
-        console.print(f" [bold orange3]Following:[/bold orange3] [white not bold]{user_info['following']}")
-        print()
-
-        console.print(f" [bold blue3]Account created on[/bold blue3] [white not bold]{user_info['created']}")
-        console.print(f" [bold blue3]Last updated on[/bold blue3] [white not bold]{user_info['updated']}")
-        print()
-
-    elif args.command == "event":    
-        print()
-        console.print("{:^100s}".format(f" [bold cyan]Displaying Github Event Activities of {data[0]['actor']['login']}[/bold cyan]"))
-
-        if repo_event_info[0]['info'] is None:
-            pass
-        elif repo_event_info[0]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]Push event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]Push Events[/bold green] " + "[bold green]=[/bold green]" * 80)
-            print()
-            for repo in repo_event_info[0]['info']:
-                console.print(f" [bold cyan]Pushed {len(repo['repo_msgs'])} commit(s) to {repo['repo_name']}[/bold cyan]")
-                for message in repo['repo_msgs']:
-                    console.print(f" - [magenta][{message['timestamp']}][/magenta] {message['message']}.")
-                print()
-
-        if repo_event_info[1]['info'] is None:
-            pass
-        elif repo_event_info[1]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]PullRequest event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]PullRequest Events[/bold green] " + "[bold green]=[/bold green]" * 73)        
-            print()
-            for repo in repo_event_info[1]['info']:
-                console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
-                for pr in repo['pr_info']:
-                    console.print(f" - [magenta][{pr['timestamp']}][/magenta] {pr['action'].capitalize()} PR: {pr['title']}")
-                print()
-
-        if repo_event_info[2]['info'] is None:
-            pass
-        elif repo_event_info[2]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]Issues event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]Issues Events[/bold green] " + "[bold green]=[/bold green]" * 78)
-            print()
-            for repo in repo_event_info[2]['info']:
-                console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
-                for issue in repo['issue_info']:
-                    console.print(f" - [magenta][{issue['timestamp']}][/magenta] {issue['action'].capitalize()} Issue: {issue['title']}")
-                print()
-
-        if repo_event_info[3]['info'] is None:
-            pass
-        elif repo_event_info[3]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]Fork event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]Fork Events[/bold green] " + "[bold green]=[/bold green]" * 80)
-            print()
-            for repo in repo_event_info[3]['info']:
-                console.print(f" - [magenta][{repo['timestamp']}][/magenta] Forked [bold cyan]{repo['repo_name']} [/bold cyan]to [bold cyan]{repo['forked_repo_name']}[/bold cyan]")
-                print()
-
-        if repo_event_info[4]['info'] is None:
-            pass
-        elif repo_event_info[4]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]Watch event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]Watch Events[/bold green] " + "[bold green]=[/bold green]" * 79)
-            print()
-            for repo in repo_event_info[4]['info']:
-                console.print(f" - [magenta][{repo['timestamp']}][/magenta] Starred [bold cyan]{repo['repo_name']}[/bold cyan]")
-                print()
-
-        if repo_event_info[5]['info'] is None:
-            pass
-        elif repo_event_info[5]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]Create event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]Create Events[/bold green] " + "[bold green]=[/bold green]" * 78)
-            print()
-            for repo in repo_event_info[5]['info']:
-                console.print(f" - [magenta][{repo['timestamp']}][/magenta] Created new repository [bold cyan]{repo['repo_name']}[/bold cyan]")
-                print()
-
-        if repo_event_info[6]['info'] is None:
-            pass
-        elif repo_event_info[6]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]Release event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]Release Events[/bold green] " + "[bold green]=[/bold green]"* 77)
-            print()
-            for repo in repo_event_info[6]['info']:
-                console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
-                console.print(f" - [magenta][{repo['timestamp']}][/magenta] Release: {repo['release_name']} (Tag: {repo['tag_name']})")
-                print()
-
-        if repo_event_info[7]['info'] is None:
-            pass
-        elif repo_event_info[7]['info'] == "Event does not exist":
-            print()
-            console.print(" [bold red]Delete event not found.[/bold red]\n")
-        else:
-            print()
-            console.print(" [bold green]Delete Events[/bold green] " + "[bold green]=[/bold green]"* 78)
-            print()
-            for repo in repo_event_info[7]['info']:
-                console.print(f" [bold cyan]{repo['repo_name']}[/bold cyan]")
-                console.print(f" - [magenta][{repo['timestamp']}][/magenta] Deleted {repo['ref_type']}: {repo['ref']}")
-                print()
-
-    elif args.command == "popular":        
-        print()
-        console.print(" [bold cyan]Displaying Popular GitHub Repositories[/bold cyan]")
-        print()
-
-        for repo in data['items']:
-            console.print(" " + "[bold cyan]=[/bold cyan]" * 80)      
-            console.print(f" [bold green]Repository name:[/bold green] {repo['name']}")
-            console.print(f" [bold green]Owner:[/bold green] {repo['owner']['login']}")
-            console.print(f" [bold green]Link:[/bold green] {repo['html_url']}")
-            print()
-
-            console.print(f" [bold magenta]Description:[/bold magenta] {repo['description']}")
-            console.print(f" [bold magenta]Language:[/bold magenta] {repo['language']}")
-            print()
-            
-            console.print(f" [bold orange3]Watchers:[/bold orange3] [white not bold]{repo['watchers_count']}")
-            console.print(f" [bold red]Forks:[/bold red] [white not bold]{repo['forks_count']}")
-            console.print(f" [bold yellow]Stars:[/bold yellow] [white not bold]{repo['stargazers_count']}")
-            print()
-
-            console.print(f" [bold blue3]Created on[/bold blue3] [white not bold]{repo['created_at'][0:10]}")
-            console.print(f" [bold blue3]Last updated on[/bold blue3] [white not bold]{repo['updated_at'][0:10]}")
-            console.print(" " + "[bold cyan]=[/bold cyan]" * 80)
-            print()            
-
-def main():    
-    if args.command == "search":
-        display_events()
-
+        handle_search_command()
     elif args.command == "event":
-        check_conflicts(args)
-
-        if not any([args.default_events, args.all_events, args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete]):
-            args.default_events = True
-
-        if args.default_events:
-            push_event()
-            pull_request_event()
-            issues_event()
-            fork_event()
-            watch_event()
-
-        elif args.all_events:
-            push_event()
-            pull_request_event()
-            issues_event()
-            fork_event()
-            watch_event()
-            create_event()
-            release_event()
-            delete_event()
-
-        else:
-            if args.push:
-                push_event()
-            if args.pullrequest:
-                pull_request_event()
-            if args.issues:
-                issues_event()
-            if args.fork:
-                fork_event()
-            if args.watch:
-                watch_event()
-            if args.create:
-                create_event()
-            if args.release:
-                release_event()
-            if args.delete:
-                delete_event()
-
-        display_events()
-
+        handle_event_command()
     elif args.command == "popular":
-        display_events()
+        handle_popular_command()
+    else:
+        print("Invalid arguments.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
