@@ -52,24 +52,20 @@ python github-cli.py popular [flag(s)]
 ### Examples:
 1. To fetch user profile info:
    ```bash
-   python github-cli.py search <github_username>
+   python github-cli.py search Lethios
    ```
 2. To fetch the standard events:
    ```bash
-   python github-cli.py event <github_username> --default-events
+   python github-cli.py events Lethios --default-events
    ```
-3. To fetch every event:
+3. To fetch pull request, issues  and create events:
    ```bash
-   python github-cli.py event <github_username> --all-events
+   python github-cli.py events Lethios --pullrequest --issues --create
    ```
-4. To fetch only push events:
+4. To discover popular Python CLI repos with 200+ stars since 2023:
    ```bash
-   python github-cli.py event <github_username> --push
-   ```
-5. To fetch pull request and issues events:
-   ```bash
-   python github-cli.py event <github_username> --pullrequest --issues
-   ```
+   python github-cli.py popular --language python --topic cli --min-stars 200 --since 2023-01-01
+   ``` 
 
 # Notes:
 - This program fetches events from GitHub, so a **valid internet connection** is required.
