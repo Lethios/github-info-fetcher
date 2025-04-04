@@ -1,4 +1,4 @@
-![github-info-fetcher](https://socialify.git.ci/Lethios/github-info-fetcher/image?custom_description=Easily+fetch+GitHub+user+profiles+and+event+history+right+from+your+terminal.&description=1&language=1&name=1&owner=1&pattern=Formal+Invitation&theme=Auto)
+![github-info-fetcher](https://socialify.git.ci/Lethios/github-info-fetcher/image?custom_description=A+simple+and+powerful+CLI+tool+to+explore+GitHub+profiles%2C+events%2C+and+popular+repositories+with+customizable+filters.&description=1&language=1&name=1&owner=1&pattern=Formal+Invitation&theme=Auto)
 
 ## Features
 - **GitHub User Lookup**  
