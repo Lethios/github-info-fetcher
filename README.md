@@ -1,13 +1,20 @@
 ![github-info-fetcher](https://socialify.git.ci/Lethios/github-info-fetcher/image?custom_description=Easily+fetch+GitHub+user+profiles+and+event+history+right+from+your+terminal.&description=1&language=1&name=1&owner=1&pattern=Formal+Invitation&theme=Auto)
 
 ## Features
-- Fetch GitHub user profile information.
-- Fetch main GitHub events such as Push, PullRequest, Issues, Fork, and Watch.
-- Option to fetch all events including Create, Release, and Delete events.
-- Filter events by type using specific flags.
-- Combine multiple flags to customize the events fetched.
-- Display events in a user-friendly format using rich text formatting.
-
+- **GitHub User Lookup**  
+  View detailed profile information about any GitHub user with a single command.
+- **Event Fetcher**  
+  Retrieve user activity with options to:
+  - Show default events (Push, Pull Request, Issues, Fork, Watch)
+  - Show all available GitHub events (including Create, Delete, Release)
+  - Filter by one or more event types using flags
+- **Popular Repositories Explorer**  
+  Discover trending repositories with filters for language, topic, creation date, stars, and more.
+- **Rich Terminal Output**  
+  All data is beautifully displayed using color-coded formatting for clarity and ease of reading.
+- **Flexible CLI**  
+  Combine multiple flags for custom output. Designed with argparse for intuitive command-line usage.
+  
 ## Installation
 1. **Ensure Python is installed (Python 3.x recommended).**
 2. **Clone the repository and install the dependencies:**
