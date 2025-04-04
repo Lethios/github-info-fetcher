@@ -1,58 +1,3 @@
-"""
-GitHub Info Fetcher
-
-This CLI tool allows users to fetch and display GitHub user information and activity events.
-
-Features:
-1. Fetch GitHub User Info:
-  - Retrieve user details such as name, bio, location, followers, and account creation date.
-  - Display information in a structured and visually appealing format using Rich.
-  
-2. Fetch GitHub Events:
-  - Retrieve recent activity events of a specified user.
-  - Supports filtering by event types (Push, PullRequest, Issues, Fork, Watch, etc.).
-  - Allows combining multiple filters for customized event fetching.
-
-Usage:
-    python github-cli.py <command> <github_username> <flag(s)>
-
-Available Commands:
-    search       : Fetch and display GitHub user profile information.
-    event        : Fetch and display GitHub activity events for the user.
-
-Available Flags (For "event" command):
-    --help             : Show the help message.
-    --default-events   : Fetch only the main events (Push, PullRequest, Issues, Fork, Watch).
-    --all-events       : Fetch every type of event.
-    --push             : Fetch Push events.
-    --pullrequest      : Fetch Pull Request events.
-    --issues           : Fetch Issues events.
-    --fork             : Fetch Fork events.
-    --watch            : Fetch Watch events.
-    --create           : Fetch Create events.
-    --release          : Fetch Release events.
-    --delete           : Fetch Delete events.
-
-Examples:
-1. Fetch GitHub user information:
-   python github-cli.py search <github_username>
-
-2. Fetch standard events of a user:
-   python github-cli.py event <github_username> --default-events
-
-3. Fetch all available events:
-   python github-cli.py event <github_username> --all-events
-
-4. Fetch specific events (e.g., Pull Requests and Issues):
-   python github-cli.py event <github_username> --pullrequest --issues
-
-Notes:
-- A valid internet connection is required.
-- The output is styled using the `rich` library for improved readability.
-
-Author: Lethios
-"""
-
 import argparse
 import sys
 import requests
@@ -134,6 +79,13 @@ event_parser.add_argument("--create", action="store_true")
 event_parser.add_argument("--release", action="store_true")
 event_parser.add_argument("--delete", action="store_true")
 
+popular_parser = subparser.add_parser("popular")
+popular_parser.add_argument("--language", action="store")
+popular_parser.add_argument("--topic", action="store")
+popular_parser.add_argument("--after", action="store")
+popular_parser.add_argument("--min-stars", action="store")
+popular_parser.add_argument("--limit", action="store")
+
 args = parser.parse_args()
 
 def check_conflicts(parsed_args):
@@ -188,11 +140,26 @@ def fetch_github_activity(username):
         print(f"Error: Unable to fetch data from GitHub API. {e}")
         sys.exit(1)
 
+def fetch_github_repo(queries):
+    try:
+        response = requests.get(f"https://api.github.com/search/repositories{queries}", timeout=10)
+        return response.json()
+    except requests.exceptions.Timeout:
+        print("Error: Request timed out. Please try again later.")
+        sys.exit(1)
+    except requests.exceptions.ConnectionError:
+        print("Error: Connection error. Please check your internet connection.")
+        sys.exit(1)
+    except requests.exceptions.RequestException as e:
+        print(f"Error: Unable to fetch data from GitHub API. {e}")
+        sys.exit(1)
+
 if args.command == "search":
     data = fetch_github_user(args.search)
     user_info = {
         "username": data['login'],
         "name": data['name'],
+        "link": data['html_url'],
         "bio": data['bio'],
         "location": data['location'],
         "blog": data['blog'],
@@ -241,6 +208,34 @@ elif args.command == "event":
             "info": None
         }
     ]
+
+elif args.command == "popular":
+    flags = [args.language, args.topic, args.after, args.min_stars, args.limit]
+
+    if all(flag is None for flag in flags):
+        queries = "?q=stars:>1000&sort=stars&order=desc"
+        data = fetch_github_repo(queries)
+    else:
+        dict = {
+            args.language: "language:",
+            args.topic: "topic:",
+            args.after: "created:>=",
+            args.min_stars: "stars:>=",
+            args.limit: "&per_page="
+        }
+        queries = "?q="
+        for flag in flags:
+            if flag is not None:
+                query = ""
+                if flag is not None:
+                    if flag is not args.limit:
+                        query = dict[flag] + flag + "+"
+                    else:
+                        query = dict[flag] + flag
+                    queries += query
+
+        queries += "&sort=stars&order=desc"
+        data = fetch_github_repo(queries)
 
 else:
     print("Invalid arguments.")
@@ -451,6 +446,7 @@ def display_events():
 
         console.print(f" [bold green]Username:[/bold green] {user_info['username']}")
         console.print(f" [bold green]Name:[/bold green] {user_info['name']}")
+        console.print(f" [bold green]Profile link:[/bold green] {user_info['link']}")
         print()
 
         console.print(f" [bold magenta]Bio:[/bold magenta] {user_info['bio']}")
@@ -587,6 +583,32 @@ def display_events():
                 console.print(f" - [magenta][{repo['timestamp']}][/magenta] Deleted {repo['ref_type']}: {repo['ref']}")
                 print()
 
+    elif args.command == "popular":        
+        print()
+        console.print(" [bold cyan]Displaying Popular GitHub Repositories[/bold cyan]")
+        print()
+
+        for repo in data['items']:
+            console.print(" [bold cyan]=[/bold cyan]" * 80)      
+            console.print(f" [bold green]Repository name:[/bold green] {repo['name']}")
+            console.print(f" [bold green]Owner:[/bold green] {repo['owner']['login']}")
+            console.print(f" [bold green]Link:[/bold green] {repo['html_url']}")
+            print()
+
+            console.print(f" [bold magenta]Description:[/bold magenta] {repo['description']}")
+            console.print(f" [bold magenta]Language:[/bold magenta] {repo['language']}")
+            print()
+            
+            console.print(f" [bold orange3]Watchers:[/bold orange3] {repo['watchers_count']}")
+            console.print(f" [bold red]Forks:[/bold red] {repo['forks_count']}")
+            console.print(f" [bold gold3]Stars:[/bold gold3] {repo['stargazers_count']}")
+            print()
+
+            console.print(f" [bold blue3]Created on[/bold blue3] {repo['created_at'][0:10]}")
+            console.print(f" [bold blue3]Last updated on[/bold blue3] {repo['updated_at'][0:10]}")
+            console.print(" [bold cyan]=[/bold cyan]" * 80)
+            print()            
+
 def main():    
     if args.command == "search":
         display_events()
@@ -632,6 +654,9 @@ def main():
             if args.delete:
                 delete_event()
 
+        display_events()
+
+    elif args.command == "popular":
         display_events()
 
 if __name__ == "__main__":
