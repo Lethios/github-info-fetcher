@@ -31,6 +31,10 @@ Fetch Github Events Info:
 ```bash
 python github-cli.py event <github_username> <flag(s)>
 ```
+Discover Popular Repositories:
+```bash
+python github-cli.py popular [flag(s)]
+```
 
 ### Available flags:
 - `--help`: Show the help message.
