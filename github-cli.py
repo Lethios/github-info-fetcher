@@ -589,7 +589,7 @@ def display_events():
         print()
 
         for repo in data['items']:
-            console.print(" [bold cyan]=[/bold cyan]" * 80)      
+            console.print(" " + "[bold cyan]=[/bold cyan]" * 80)      
             console.print(f" [bold green]Repository name:[/bold green] {repo['name']}")
             console.print(f" [bold green]Owner:[/bold green] {repo['owner']['login']}")
             console.print(f" [bold green]Link:[/bold green] {repo['html_url']}")
@@ -599,14 +599,14 @@ def display_events():
             console.print(f" [bold magenta]Language:[/bold magenta] {repo['language']}")
             print()
             
-            console.print(f" [bold orange3]Watchers:[/bold orange3] {repo['watchers_count']}")
-            console.print(f" [bold red]Forks:[/bold red] {repo['forks_count']}")
-            console.print(f" [bold gold3]Stars:[/bold gold3] {repo['stargazers_count']}")
+            console.print(f" [bold orange3]Watchers:[/bold orange3] [white not bold]{repo['watchers_count']}")
+            console.print(f" [bold red]Forks:[/bold red] [white not bold]{repo['forks_count']}")
+            console.print(f" [bold yellow]Stars:[/bold yellow] [white not bold]{repo['stargazers_count']}")
             print()
 
-            console.print(f" [bold blue3]Created on[/bold blue3] {repo['created_at'][0:10]}")
-            console.print(f" [bold blue3]Last updated on[/bold blue3] {repo['updated_at'][0:10]}")
-            console.print(" [bold cyan]=[/bold cyan]" * 80)
+            console.print(f" [bold blue3]Created on[/bold blue3] [white not bold]{repo['created_at'][0:10]}")
+            console.print(f" [bold blue3]Last updated on[/bold blue3] [white not bold]{repo['updated_at'][0:10]}")
+            console.print(" " + "[bold cyan]=[/bold cyan]" * 80)
             print()            
 
 def main():    
