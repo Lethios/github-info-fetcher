@@ -2,16 +2,17 @@
 
 ## Features
 - **GitHub User Lookup**  
-  View detailed profile information about any GitHub user with a single command.
+  View detailed profile information about any GitHub user with a single command.  
 - **Event Fetcher**  
   Retrieve user activity with options to:
   - Show default events (Push, Pull Request, Issues, Fork, Watch)
   - Show all available GitHub events (including Create, Delete, Release)
-  - Filter by one or more event types using flags
+  - Filter by one or more event types using flags  
 - **Popular Repositories Explorer**  
-  Discover trending repositories with filters for language, topic, creation date, stars, and more.
+  Discover trending repositories with filters for language, topic, creation date, stars, and more.  
 - **Rich Terminal Output**  
   All data is beautifully displayed using color-coded formatting for clarity and ease of reading.
+  
 - **Flexible CLI**  
   Combine multiple flags for custom output. Designed with argparse for intuitive command-line usage.
   
@@ -38,10 +39,10 @@ python github-cli.py popular [flag(s)]
 
 ### Available flags:
 
-General
+General:
 - `--help`: Show the help message.
   
-Events Filtering
+Events Filtering:
 - `--default-events`: Fetch only the main events (Push, PullRequest, Issues, Fork, Watch).
 - `--all-events`: Fetch every type of event.
 - `--push`: Fetch Push events.
@@ -53,7 +54,7 @@ Events Filtering
 - `--release`: Fetch Release events.
 - `--delete`: Fetch Delete events.
   
-Popular Repositories Filtering
+Popular Repositories Filtering:
 - `--language <name>`: Filter by programming language.
 - `--topic <name>`: Filter by topic.
 - `--after <YYYY-MM-DD>`: Filter repositories created after a specific date.
