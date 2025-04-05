@@ -53,10 +53,6 @@ HELP_MESSAGE = """
  4. To discover popular Python CLI repos with 200+ stars since 2023:
     [bold yellow] python github-cli.py popular --language python --topic cli --min-stars 200 --since 2023-01-01[/bold yellow]
 
-[bold magenta] Additional Information:[/bold magenta] 
- - Events display relevant details such as repository, message, and timestamp.
- - Combine flags to filter events, such as [bold yellow]--fork --watch[/bold yellow].
-
 [bold red] Note:[/bold red] This program fetches data from GitHub, so a valid internet connection is required.
 """
 
