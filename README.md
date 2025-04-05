@@ -18,6 +18,7 @@
   
 ## Installation
 1. **Ensure Python is installed (Python 3.x recommended).**
+   
 2. **Clone the repository and install the dependencies:**
    ```bash
    pip install -r requirements.txt
