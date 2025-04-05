@@ -78,17 +78,11 @@ Popular Repositories Filtering
    python github-cli.py popular --language python --topic cli --min-stars 200 --since 2023-01-01
    ``` 
 
-# Notes:
-- This program fetches events from GitHub, so a **valid internet connection** is required.
-- The events are displayed with **rich text formatting** for better readability.
-
 ## Author
-
 **Lethios**
 - Github: [@Lethios](https://github.com/Lethios)
 - Twitter: [@LethiosDev](https://x.com/LethiosDev)
 
 ## License
-
 Copyright © 2025 [Lethios](https://github.com/Lethios).  
 This project is licensed under the [MIT License](LICENSE).
