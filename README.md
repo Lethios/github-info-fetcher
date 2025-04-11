@@ -21,6 +21,10 @@
    
 2. **Clone the repository and install the dependencies:**
    ```bash
+   git clone https://github.com/Lethios/github-info-fetcher.git
+   cd github-info-fetcher
+   ```
+   ```bash
    pip install -r requirements.txt
    ```
 
