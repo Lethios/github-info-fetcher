@@ -33,10 +33,12 @@ Fetch Github User Profile Info:
 ```bash
 python github-cli.py search <github_username>
 ```
+
 Fetch Github Events Info:
 ```bash
 python github-cli.py event <github_username> <flag(s)>
 ```
+
 Discover Popular Repositories:
 ```bash
 python github-cli.py popular [flag(s)]
