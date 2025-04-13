@@ -45,7 +45,6 @@ python github-cli.py popular [flag(s)]
 ```
 
 ### Available flags:
-
 General:
 - `--help`: Show the help message.
   
