@@ -189,7 +189,7 @@ def handle_event_command():
             print("The --all-events flag can only be used on its own.")
             sys.exit(1)
     
-    check_conflicts(args)    
+    check_conflicts(args)
     
     repo_event_info = [
         {"type": "PushEvent", "info": None},
@@ -202,7 +202,7 @@ def handle_event_command():
         {"type": "DeleteEvent", "info": None}
     ]    
     
-    data = fetch_github_activity(args.events)    
+    data = fetch_github_activity(args.events)
     
     if not any([args.default_events, args.all_events, args.push, args.pullrequest, args.issues, args.fork, args.watch, args.create, args.release, args.delete]):
         args.default_events = True
